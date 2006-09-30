@@ -1,3 +1,11 @@
+#
+# Net::FTP::Simple - Simplified Net::FTP interface encapsulating a few simple
+# operations.
+#
+# Written by Wil Cooley <wcooley@nakedape.cc>
+#
+# $Id$
+#
 package Net::FTP::Simple;
 use strict;
 use warnings;
@@ -7,26 +15,10 @@ use File::Basename  qw( basename dirname );
 use File::Spec;
 use Net::FTP;
 
-eval q{ use version; our $VERSION = qv(0.0.1) };
-our $VERSION = '0.0.1' if ($EVAL_ERROR);
+#eval q{ use version; our $VERSION = qv(0.0.1) };
+our $VERSION = '0.0.1'; # if ($EVAL_ERROR);
 
 
-#
-# send_files - Given a list of files, it sends them via FTP.
-#
-# It does not preserve the local path of the files; it strips the filename
-# down to the base filename and sends it to the directory on the FTP server 
-# named in the 'remote_dir' parameter.  
-#
-# When uploading, files are sent with '.tmp' appended to their names and 
-# then renamed into place, because some FTP servers process files based on 
-# their extensions and this ensures each file is sent completely before 
-# processing.
-#
-# 'remote_dir' is created if it does not exist.
-#
-# Returns an array or array ref of the returned files.
-#
 sub send_files {
     # Allow calls either as Net::FTP::Simple->send_files or
     #  Net::FTP::Simple::send_files
@@ -82,21 +74,6 @@ sub send_files {
 }
 
 
-#
-# retrieve_files - Retrieve a list of files or a directory of files (but not
-#                  recursively).
-#
-# Unlike send_files, it does not create the (local) destination nor does it
-# change to it.
-#
-# If 'delete_after' is true, then the remote files are deleted after being
-# successfully downloaded.  [ FIXME Should a transfer be considered successful
-# if the file is retrieved but not deleted? Currently, it is. ]
-#
-# Files may be specified with a list called 'files' or a regular expression
-# 'file_filter'.  'files' takes precedence over 'file_filter'; if both are
-# given, the latter is ignored.
-#
 sub retrieve_files {
     # Allow calls either as Net::FTP::Simple->send_files or
     #  Net::FTP::Simple::send_files
@@ -539,7 +516,44 @@ List options:
 
 =back
 
-FIXME Describe behavior details more.
+=item send_files - Given a list of files, it sends them via FTP.
+
+It does not preserve the local path of the files; it strips the filename
+down to the base filename and sends it to the directory on the FTP server 
+named in the 'remote_dir' parameter.  
+
+When uploading, files are sent with '.tmp' appended to their names and 
+then renamed into place, because some FTP servers process files based on 
+their extensions and this ensures each file is sent completely before 
+processing.
+
+'remote_dir' is created if it does not exist.
+
+Returns an array or array ref of the returned files.
+
+=cut
+
+=item retrieve_files - Retrieve a list of files or a directory of files (but
+    not recursively).
+
+Unlike send_files, it does not create the (local) destination nor does it
+change to it.
+
+If 'delete_after' is true, then the remote files are deleted after being
+successfully downloaded.  [ FIXME Should a transfer be considered successful
+if the file is retrieved but not deleted? Currently, it is. ]
+
+Files may be specified with a list called 'files' or a regular expression
+'file_filter'.  'files' takes precedence over 'file_filter'; if both are
+given, the latter is ignored.
+
+=cut
+
+=item list_files - List files in a given directory.  Ignores anything
+that is not a normal file--directories, device files, FIFOs, sockets, etc.
+Currently only works with UNIX-like directory listings.
+
+=cut
 
 =head1 DIAGNOSTICS
 

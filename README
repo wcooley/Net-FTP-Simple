@@ -1,0 +1,26 @@
+Net-FTP-Simple version 0.0.1
+
+The Net::FTP::Simple module provides a simplified interface for commn
+FTP tasks.
+
+INSTALLATION
+
+To install this module, run the following commands:
+
+    perl Makefile.PL
+    make
+    make test
+    make install
+
+
+DEPENDENCIES
+
+Net::FTP
+
+
+COPYRIGHT AND LICENSE
+
+Copyright (C) 2006, Wil Cooley
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.

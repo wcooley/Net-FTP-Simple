@@ -20,7 +20,9 @@ BEGIN {
     eval {
         Net::FTP::Simple->_new({});
     };
-    if ($EVAL_ERROR) { die $EVAL_ERROR; }
+    if ($EVAL_ERROR =~ m/requires at least 'server' parameter/) { 
+        pass("Correctly fail on missing parameters");
+    }
 
 }
 

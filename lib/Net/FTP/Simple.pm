@@ -396,7 +396,6 @@ __END__
 Net::FTP::Simple - Simplified interface to a few common FTP tasks with
 Net::FTP.
 
-
 =head1 VERSION
 
 This document describes Net::FTP::Simple version 0.0.1
@@ -469,54 +468,21 @@ print "The following files were retrieved successfully:\n\t",
 
 =head1 INTERFACE 
 
-Net::FTP::Simple provides the user with three options: list a directory,
+Net::FTP::Simple provides the user with three operations: list a directory,
 retrieve a directory or list of files, or send a list of files.
 
-All three operations, C<list_files>, C<retrieve_files> and C<send_files>
-may be invoked using either module or class syntax; i.e.,
-C<Net::FTP::Simple::list_files> or C<Net::FTP::Simple->list_files>.  As
-these are one-shot operations, there is no publically-instantiable object.
+All three operations, list_files(), retrieve_files() and
+send_files() may be invoked using either module or class syntax; i.e.,
+Net::FTP::Simple::list_files() or Net::FTP::Simple->list_files().  As these
+are one-shot operations, there is no publically-instantiable object.
 
-Common options:
-
-=over 4
-
-=item server        - Hostname or IP address of FTP server.
-
-=item username      - Login username.
-
-=item password      - Login password.
-
-=item mode          - C<ascii> or C<binary> (default C<binary>).
-
-=item debug_ftp     - (bool) Turn on Net::FTP debugging.
-
-=item remote_dir    - Remote directory against which to operate.
-
-=item files         - List ref of files to operate one.
-
-
-=back
-
-Retrieval options:
+=head2 Subroutines
 
 =over 4
 
-=item delete_after  - (bool) Delete files after retrieving them.
+=item send_files()
 
-=item file_filter   - Regex against which to apply to list of remote files.
-
-=back
-
-List options:
-
-=over 4
-
-=item file_filter   - Regex against which to apply to list of remote files.
-
-=back
-
-=item send_files - Given a list of files, it sends them via FTP.
+Given a list of files, send them via FTP.
 
 It does not preserve the local path of the files; it strips the filename
 down to the base filename and sends it to the directory on the FTP server 
@@ -531,10 +497,11 @@ processing.
 
 Returns an array or array ref of the returned files.
 
-=cut
+=item retrieve_files()
 
-=item retrieve_files - Retrieve a list of files or a directory of files (but
-    not recursively).
+Retrieve a list of files or a directory of files.
+
+Does not work recursively.
 
 Unlike send_files, it does not create the (local) destination nor does it
 change to it.
@@ -547,13 +514,72 @@ Files may be specified with a list called 'files' or a regular expression
 'file_filter'.  'files' takes precedence over 'file_filter'; if both are
 given, the latter is ignored.
 
-=cut
+=item list_files()
 
-=item list_files - List files in a given directory.  Ignores anything
-that is not a normal file--directories, device files, FIFOs, sockets, etc.
-Currently only works with UNIX-like directory listings.
+List files in a given directory.
 
-=cut
+Ignores anything that is not a normal file--directories, device files, FIFOs,
+sockets, etc.  Currently only works with UNIX-like directory listings.
+
+=back
+
+=head2 Common Options
+
+=over 4
+
+=item server 
+
+Hostname or IP address of FTP server.
+
+=item username 
+
+Login username.
+
+=item password 
+
+Login password.
+
+=item mode
+
+C<ascii> or C<binary> (default C<binary>).
+
+=item debug_ftp
+
+(bool) Turn on Net::FTP debugging.
+
+=item remote_dir
+
+Remote directory against which to operate.
+
+=item files
+
+List ref of files to operate one.
+
+=back
+
+=head2 Retrieval Options
+
+=over 4
+
+=item delete_after 
+
+(bool) Delete files after retrieving them.
+
+=item file_filter
+
+Regex against which to apply to list of remote files.
+
+=back
+
+=head2 List Options
+
+=over 4
+
+=item file_filter
+
+Regex against which to apply to list of remote files.
+
+=back
 
 =head1 DIAGNOSTICS
 
@@ -577,17 +603,18 @@ As this module is a facade layer on top of Net::FTP, it required Net::FTP.
 
 =head1 INCOMPATIBILITIES
 
-None known..
+None known.
 
 =head1 BUGS AND LIMITATIONS
 
 No bugs have been reported (so far).  It is unlikely that the behaviours
 encapsulated in this module with meet with everyone's needs, but hey,
-that's life.
+that's life.  For one thing, it probably should support proxying.
 
 Please report any bugs or feature requests to
 C<bug-net-ftp-simple@rt.cpan.org>, or through the web interface at
 L<http://rt.cpan.org>.
+
 
 =head1 AUTHOR
 
@@ -603,15 +630,16 @@ modify it under the same terms as Perl itself. See L<perlartistic>.
 
 =head1 DISCLAIMER OF WARRANTY
 
-BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
-FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
-OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
-PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
-EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
-ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
-YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
-NECESSARY SERVICING, REPAIR, OR CORRECTION.
+BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY FOR THE
+SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN OTHERWISE
+STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES PROVIDE THE
+SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS FOR A PARTICULAR PURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND
+PERFORMANCE OF THE SOFTWARE IS WITH YOU.  IF SOMETHING IS TYPED IN ALL CAPITAL
+LETTERS IT LOOKS REALLY MEAN AND OFFICIAL, WHICH IS WHY LAWYERS LOVE IT.
+SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY
+SERVICING, REPAIR, OR CORRECTION.
 
 IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
 WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
@@ -623,3 +651,5 @@ RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
 FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
 SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGES.
+
+

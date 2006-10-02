@@ -4,8 +4,6 @@ lib/Net/FTP/Fake.pm
 lib/Net/FTP/Simple.pm
 Makefile.PL
 MANIFEST
-META.yml			# Will be created by "make dist"
-Net-FTP-Simple-v0.0.1/lib/Net/FTP/Simple.pm
 README
 t/00.load.t
 t/10-Net-FTP-Simple.t

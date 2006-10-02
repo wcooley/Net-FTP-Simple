@@ -23,6 +23,9 @@ BEGIN {
     if ($EVAL_ERROR =~ m/requires at least 'server' parameter/) { 
         pass("Correctly fail on missing parameters");
     }
+    else {
+        fail("Did not fail with missing parameters");
+    }
 
 }
 

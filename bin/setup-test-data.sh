@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# test-data/setup-test-data.sh - Setup test data.  
+# bin/setup-test-data.sh - Setup test files.  
 # MakeMaker doesn't handle files with spaces in their names.
 #
 # This is meant to be run from the t/ directory (or at any rate, a sibling of

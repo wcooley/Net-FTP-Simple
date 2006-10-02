@@ -1,19 +1,14 @@
 .cvsignore
+bin/setup-test-data.sh
 Changes
 lib/Net/FTP/Fake.pm
 lib/Net/FTP/Simple.pm
 Makefile.PL
 MANIFEST
+MANIFEST.SKIP
 README
 t/00.load.t
 t/10-Net-FTP-Simple.t
 t/perlcritic.t
 t/pod-coverage.t
 t/pod.t
-test-data/empty-file
-test-data/test file with spaces
-test-data/test-subdir/dir-a/file-a-a
-test-data/test-subdir/file-a
-test-data/test-subdir/file-b
-test-data/test-subdir/file-c
-tmp/file with spaces

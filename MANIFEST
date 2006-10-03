@@ -1,7 +1,7 @@
-.cvsignore
+.svnignore
 bin/setup-test-data.sh
 Changes
-lib/Net/FTP/Fake.pm
+tlib/Net/FTP/Fake.pm
 lib/Net/FTP/Simple.pm
 Makefile.PL
 MANIFEST

@@ -3,6 +3,7 @@
 #
 # Written by Wil Cooley
 #
+use lib             qw( tlib );
 use strict;
 use warnings;
 use English         qw( -no_match_vars );

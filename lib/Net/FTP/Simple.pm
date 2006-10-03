@@ -15,8 +15,9 @@ use File::Basename  qw( basename dirname );
 use File::Spec;
 use Net::FTP;
 
+# FIXME MakeMaker doesn't handle this well
 #eval q{ use version; our $VERSION = qv(0.0.1) };
-our $VERSION = '0.0.1'; # if ($EVAL_ERROR);
+our $VERSION = '0.0.2'; # if ($EVAL_ERROR);
 
 
 sub send_files {
@@ -73,6 +74,34 @@ sub send_files {
 
 }
 
+sub rename_files {
+    # Allow calls either as Net::FTP::Simple->send_files or
+    #  Net::FTP::Simple::send_files
+    my ($opt_ref) = $_[-1];
+
+    my @successful_renames;
+
+    my $ftp = Net::FTP::Simple->_new($opt_ref);
+
+    # FIXME How out doing the retry here?
+    while (my ($src, $dst) = each %{ $ftp->{'rename_files'} }) {
+
+        if ( $ftp->_conn()->rename($src, $dst) ) {
+            push @successful_renames, $src;
+        }
+
+        else {
+            carp $ftp->_error("Error renaming '$src' to '$dst'");
+
+        }
+
+    }
+
+    wantarray   ?   return  @successful_renames
+                :   return \@successful_renames
+                ;
+
+}
 
 sub retrieve_files {
     # Allow calls either as Net::FTP::Simple->send_files or
@@ -280,10 +309,11 @@ sub _error {
 
     # This may be called for errors other than those from Net::FTP
     unless ($self->_conn() and $self->_conn()->ok()) {
-        $ftp_err = sprintf(q(: '%d %s'),
-                           $self->_conn()->code(),
-                           $self->_conn()->message(),
-                   );
+        
+        my $msg = $self->_conn()->message();
+        chomp $msg;
+
+        $ftp_err = sprintf(q(: '%d %s'), $self->_conn()->code(), $msg);
     }
 
     return sprintf(q(%s: %s%s),
@@ -465,6 +495,16 @@ print "The following files were retrieved successfully:\n\t",
     join("\n\t", @received_filtered_files), "\n"
         if @received_filtered_files;
 
+my @renamed_files = Net::FTP::Simple->rename_files({
+        username        => $username,
+        password        => $password,
+        server          => $server,
+        remote_dir      => 'path/to/dir',
+        debug_ftp       => 1,
+        rename_files    => {
+                'old_name'  => 'new_name',
+        },
+});
 
 =head1 INTERFACE 
 
@@ -520,6 +560,14 @@ List files in a given directory.
 
 Ignores anything that is not a normal file--directories, device files, FIFOs,
 sockets, etc.  Currently only works with UNIX-like directory listings.
+
+=item rename_files()
+
+Renames the files given in the hash ref 'rename_files', after first changing
+to 'remote_dir'.
+
+Returns a list (or list ref, in scalar context) of the original names of the
+renamed files.
 
 =back
 

@@ -17,7 +17,7 @@ use Net::FTP;
 
 # FIXME MakeMaker doesn't handle this well
 #eval q{ use version; our $VERSION = qv(0.0.1) };
-our $VERSION = '0.0.2'; # if ($EVAL_ERROR);
+our $VERSION = '0.0.3'; # if ($EVAL_ERROR);
 
 
 sub send_files {
@@ -40,7 +40,8 @@ sub send_files {
         $retry_count   += 1;
 
         unless ( -r $file ) {
-            carp $ftp->_error("Local file '$file' unreadable; unable to transfer");
+            carp $ftp->_error("Local file '$file' unreadable; unable to transfer")
+                unless ($ftp->{'quiet_mode'});
             next FILES_TO_TRANSFER;
         }
 
@@ -48,7 +49,8 @@ sub send_files {
         # EDI-processing systems will sometimes return a "file is busy"
         # error which may be recoverable.
         unless ( $ftp->_conn()->put($file, $tmpname) ) {
-            carp $ftp->_error("Error transferring file '$file' to '$tmpname'");
+            carp $ftp->_error("Error transferring file '$file' to '$tmpname'")
+                unless ($ftp->{'quiet_mode'});
             next FILES_TO_TRANSFER;
         }
 
@@ -60,6 +62,10 @@ sub send_files {
             }
 
             next FILES_TO_TRANSFER;
+        }
+
+        if ($retry_count > 1) {
+            carp "Transfer of file '$file' succeeded after $retry_count retries";
         }
 
         push @successful_transfers, $file;
@@ -83,6 +89,13 @@ sub rename_files {
 
     my $ftp = Net::FTP::Simple->_new($opt_ref);
 
+    if ($ftp->{'remote_dir'}) {
+
+        $ftp->_conn()->cwd($ftp->{'remote_dir'})
+            or croak $ftp->_error("Error changing to remote directory",
+                     "'$ftp->{'remote_dir'}'");
+    }
+
     # FIXME How out doing the retry here?
     while (my ($src, $dst) = each %{ $ftp->{'rename_files'} }) {
 
@@ -91,7 +104,8 @@ sub rename_files {
         }
 
         else {
-            carp $ftp->_error("Error renaming '$src' to '$dst'");
+            carp $ftp->_error("Error renaming '$src' to '$dst'")
+                unless ($ftp->{'quiet_mode'});
 
         }
 
@@ -135,7 +149,8 @@ sub retrieve_files {
         my $basename = basename($file);
 
         unless ( $ftp->_conn()->get($file, $basename) ) {
-            carp $ftp->_error("Error getting file '$file'");
+            carp $ftp->_error("Error getting file '$file'")
+                unless ($ftp->{'quiet_mode'});
             next FILES_TO_TRANSFER;
         }
 
@@ -232,6 +247,9 @@ sub _new {
                                   "'$EVAL_ERROR'");
 
         $obj->_set_conn($ftpconn);
+    }
+    else {
+        $obj->_set_conn($obj->{'conn'});
     }
 
     $obj->_conn()->login( @{ $obj }{ qw( username password ) } )
@@ -428,7 +446,7 @@ Net::FTP.
 
 =head1 VERSION
 
-This document describes Net::FTP::Simple version 0.0.1
+This document describes Net::FTP::Simple version 0.0.3.
 
 =head1 SYNOPSIS
 

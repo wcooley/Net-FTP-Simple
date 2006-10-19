@@ -41,6 +41,8 @@ sub get {
 }
 
 sub login {
+    my ($self, $user, $pass) = @_;
+    return 1;
 }
 
 sub message {

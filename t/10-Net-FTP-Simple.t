@@ -228,6 +228,8 @@ my @files_to_send
     is_deeply(\@succ_transfers, [],
         "$test: 0 successes after max $retries retry failures");
 
+    # Unset the warning handler
+    setup_warning_handler();
 }
 
 # Do some basic setup of the mock object

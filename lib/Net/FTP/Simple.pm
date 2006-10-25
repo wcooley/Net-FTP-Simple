@@ -564,7 +564,7 @@ processing.
 
 'remote_dir' is created if it does not exist.
 
-Returns an array or array ref of the returned files.
+Returns an array or array ref of the original names of the sent files.
 
 =item retrieve_files()
 

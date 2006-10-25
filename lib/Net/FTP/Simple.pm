@@ -65,7 +65,7 @@ sub send_files {
         }
 
         if ($retry_count > 1) {
-            carp "Transfer of file '$file' succeeded after $retry_count retries";
+            carp "Transfer of file '$file' succeeded after $retry_count tries";
         }
 
         push @successful_transfers, $file;
@@ -377,14 +377,21 @@ sub _is_retryable_and_sleep {
     my $self = shift;
     my ($op, $count) = @_;
 
-    my $retry_max   = $retry_max{ $op }     || $retry_max{ 'default' };
-    my $retry_wait  = $retry_wait{ $op }    || $retry_wait{ 'default' };
+    my $caller_error_message = $self->_conn()->message();
+
+    my $retry_max   = exists $retry_max{ $op }  ? $retry_max{ $op }   
+                                                : $retry_max{ 'default' }
+                                                ;
+
+    my $retry_wait  = exists $retry_wait{ $op } ? $retry_wait{ $op }
+                                                : $retry_wait{ 'default' }
+                                                ;
 
     return unless   (exists $retryable_errors{ $op });
     return if       ($count > $retry_max);
 
     for my $msg (@{ $retryable_errors{ $op } }) {
-        if ($self->_conn()->message() =~ m/$msg/xms) {
+        if ($caller_error_message =~ m/$msg/ms) {  # No 'x'!
             sleep $retry_wait;
             return $msg;
         }

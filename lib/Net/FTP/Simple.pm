@@ -314,6 +314,10 @@ sub _set_caller {
     my ($self) = shift;
     my ($caller) = @_;
 
+    # It should always be something; if _new is called directly (as it usually
+    # shouldn't be, but may be in test scripts)
+    $caller = 'main' unless ($caller);
+
     return $self->{'caller'} = $caller;
 }
 

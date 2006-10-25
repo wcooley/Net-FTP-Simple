@@ -111,6 +111,8 @@ sub rename_files {
 
     }
 
+    @successful_renames = sort @successful_renames;
+
     wantarray   ?   return  @successful_renames
                 :   return \@successful_renames
                 ;

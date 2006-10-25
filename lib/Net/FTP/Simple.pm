@@ -96,7 +96,7 @@ sub rename_files {
                      "'$ftp->{'remote_dir'}'");
     }
 
-    # FIXME How out doing the retry here?
+    # FIXME How about doing the retry here?
     while (my ($src, $dst) = each %{ $ftp->{'rename_files'} }) {
 
         if ( $ftp->_conn()->rename($src, $dst) ) {
@@ -326,8 +326,8 @@ sub _error {
     my $ftp_err = q{};
 
     # This may be called for errors other than those from Net::FTP
-    unless ($self->_conn() and $self->_conn()->ok()) {
-        
+    # and there may not be a connection object
+    if ($self->_conn() and not $self->_conn()->ok()) {
         my $msg = $self->_conn()->message();
         chomp $msg;
 

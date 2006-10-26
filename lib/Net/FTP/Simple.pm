@@ -86,6 +86,7 @@ sub rename_files {
     my ($opt_ref) = $_[-1];
 
     my @successful_renames;
+    my $retry_count = 0;
 
     my $ftp = Net::FTP::Simple->_new($opt_ref);
 
@@ -96,19 +97,39 @@ sub rename_files {
                      "'$ftp->{'remote_dir'}'");
     }
 
+    my ($src, $dst);
+
     # FIXME How about doing the retry here?
-    while (my ($src, $dst) = each %{ $ftp->{'rename_files'} }) {
+    FILE_TO_RENAME:
+    #while ( ($src) = sort keys %{ $ftp->{'rename_files'} }) {
+    for $src (sort keys %{ $ftp->{'rename_files'} }) {
+        $dst = $ftp->{'rename_files'}{ $src };
 
-        if ( $ftp->_conn()->rename($src, $dst) ) {
-            push @successful_renames, $src;
+        $retry_count += 1;
+
+        unless ( $ftp->_conn()->rename($src, $dst) ) {
+            carp $ftp->_error("Error renaming '$src' to '$dst'");
+
+            if ($ftp->_is_retryable_and_sleep('rename', $retry_count)) {
+                redo FILE_TO_RENAME;
+            }
+
+            # Fall through on inability to retry
+            next FILE_TO_RENAME;
         }
 
-        else {
-            carp $ftp->_error("Error renaming '$src' to '$dst'")
-                unless ($ftp->{'quiet_mode'});
-
+        # $retry_count is always at least 1
+        if ($retry_count > 1 ) {
+            carp "Rename of file from '$src' to '$dst' succeeded after"
+                . " $retry_count tries";
         }
 
+        push @successful_renames, $src;
+
+    }
+    continue {
+        # Called on next, not on redo
+        $retry_count = 0;
     }
 
     @successful_renames = sort @successful_renames;

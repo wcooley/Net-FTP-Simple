@@ -9,7 +9,7 @@ use strict;
 use warnings;
 use English         qw( -no_match_vars );
 use File::Spec;
-use Test::More      tests => 62;
+use Test::More      tests => 96;
 use Test::MockObject;
 
 BEGIN {

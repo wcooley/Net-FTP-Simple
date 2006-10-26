@@ -18,7 +18,7 @@ unless (exists $ENV{'NET_FTP_SIMPLE_LOGIN'}) {
                    . ' NET_FTP_SIMPLE_LOGIN="user:pass:server"';
 }
 else {
-    plan tests => 5;
+    plan tests => 12;
 }
 
 my @base_test_files = qw( file-a file-b file-c );

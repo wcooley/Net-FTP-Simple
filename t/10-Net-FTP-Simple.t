@@ -9,7 +9,7 @@ use strict;
 use warnings;
 use English         qw( -no_match_vars );
 use File::Spec;
-use Test::More      tests => 96;
+use Test::More      tests => 74;
 use Test::MockObject;
 
 BEGIN {
@@ -106,6 +106,65 @@ setup_warning_handler();
     }
 
 }
+
+#######################################################################
+# _op_retry
+#######################################################################
+{
+    my $test    = '_op_retry';
+    my $op      = 'test_op';
+    my $op_msg  = 'retry test message';
+
+    ok(my $fake_conn = new_mock_ftp(), "$test: New Net::FTP mock object");
+
+    $fake_conn->set_always('message', $op_msg);
+
+    $Net::FTP::Simple::retry_max{$op} = 3;
+    $Net::FTP::Simple::retryable_errors{$op} = [ $op_msg, ];
+    $Net::FTP::Simple::retry_wait{$op} = 0;
+
+    ok(my $obj = Net::FTP::Simple->_new({
+                conn    => $fake_conn,
+                server  => 'localhost',
+    }), "$test: Net::FTP::Simple->_new()");
+
+    my @test_data = (
+        # Tries     Sequence
+        [ 1,        [ 1, ],         ],
+        [ 2,        [ 0, 1 ],       ],
+        [ 3,        [ 0, 0, 1 ],    ],
+    );
+
+    for my $test_args_ref (@test_data) {
+        my $tries   =    $test_args_ref->[0];
+        my @series  = @{ $test_args_ref->[1] };
+
+        $fake_conn->set_series($op, @series);
+
+        is($obj->_op_retry($op), $tries, 
+           "$test: $op succeeded after $tries tries");
+    }
+
+
+    $fake_conn->set_series($op, 0, 0, 0, 1);
+
+    eval {
+        $obj->_op_retry($op);
+    };
+
+    if ($EVAL_ERROR =~ m/'$op' failed after 4 attempts/) {
+        pass("$test: $op correctly failed after 4 tries");
+    }
+    elsif ($EVAL_ERROR) {
+        fail("$test: $op failed after 4 tries with unexpected error"
+             . "'$EVAL_ERROR'");
+    }
+    else {
+        fail("$test: $op did not fail after 4 tries as expected");
+    }
+    
+}
+
 
 #######################################################################
 # _list_and_filter

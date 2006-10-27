@@ -1,5 +1,22 @@
-Revision history for Net-FTP-Simple
+0.0.4  Thu Oct 26 15:54:02 PDT 2006
+ - Created generic _op_retry infrastructure.
+ - Changed send_files and rename_files to use _op_retry.
+ - Added live integration tests.
+ - Added more unit tests.
+ - Got rid of unnecessary Net::FTP::Fake; using Test::MockObject instead.
+        
+0.0.3  Thu Oct 19 12:00:00 PDT 2006
+ - Not publicly released.
+ - Added quiet mode to suppress carping for non-fatal errors.
+ - Added carp message with number of retries required.
+ - Change to remote_dir for retrieve_files.
+ - Added mock tests for list_files.
 
-0.0.1  Fri Sep 29 11:54:00 2006
-       Initial release.
+0.0.2  Tue Oct 03 12:00:00 PDT 2006
+ - Not publicly released.
+ - Further implementation.
+
+0.0.1  Fri Sep 29 11:54:00 PDT 2006
+ - Not publicly released.
+ - Initial implementation.
 

@@ -17,7 +17,7 @@ use Net::FTP;
 
 # FIXME MakeMaker doesn't handle this well
 #eval q{ use version; our $VERSION = qv(0.0.1) };
-our $VERSION = '0.0.3'; # if ($EVAL_ERROR);
+our $VERSION = '0.0.4'; # if ($EVAL_ERROR);
 
 
 sub send_files {
@@ -26,52 +26,47 @@ sub send_files {
     my ($opt_ref) = $_[-1];
 
     my @successful_transfers;
-    my $retry_count = 0;
-
     my $ftp = Net::FTP::Simple->_new($opt_ref);
 
     $ftp->_create_and_cwd_remote_dir()
         if ($ftp->{'remote_dir'});
 
-    FILES_TO_TRANSFER:
+    FILE_TO_TRANSFER:
     for my $file (@{ $ftp->{'files'} }){
+        my $try_count;
         my $basename    = basename($file);
         my $tmpname     = $basename . '.tmp';
-        $retry_count   += 1;
 
         unless ( -r $file ) {
             carp $ftp->_error("Local file '$file' unreadable; unable to transfer")
                 unless ($ftp->{'quiet_mode'});
-            next FILES_TO_TRANSFER;
+            next FILE_TO_TRANSFER;
         }
 
-        # FIXME Attempt to send several times on failure; certain
-        # EDI-processing systems will sometimes return a "file is busy"
-        # error which may be recoverable.
         unless ( $ftp->_conn()->put($file, $tmpname) ) {
             carp $ftp->_error("Error transferring file '$file' to '$tmpname'")
                 unless ($ftp->{'quiet_mode'});
-            next FILES_TO_TRANSFER;
+            next FILE_TO_TRANSFER;
         }
 
-        unless ( $ftp->_conn()->rename($tmpname, $basename) ) {
-            carp $ftp->_error("Error renaming '$tmpname' to '$basename'");
+        eval {
+            $try_count = $ftp->_op_retry('rename', $tmpname, $basename);
+        };
 
-            if ($ftp->_is_retryable_and_sleep('rename', $retry_count)) {
-                redo FILES_TO_TRANSFER;
-            }
-
-            next FILES_TO_TRANSFER;
+        if ($EVAL_ERROR =~ m/'rename' failed after \d+ attempts/ms) {
+            carp "Error renaming '$tmpname' to '$basename'";
+            next FILE_TO_TRANSFER;
+        }
+        elsif($EVAL_ERROR) {
+            # Rethrow unexpected exceptions
+            croak $EVAL_ERROR;
         }
 
-        if ($retry_count > 1) {
-            carp "Transfer of file '$file' succeeded after $retry_count tries";
+        if ($try_count > 1) {
+            carp "Transfer of file '$file' succeeded after $try_count tries";
         }
 
         push @successful_transfers, $file;
-    }
-    continue {
-        $retry_count = 0;
     }
 
     wantarray   ?   return @successful_transfers
@@ -81,55 +76,45 @@ sub send_files {
 }
 
 sub rename_files {
-    # Allow calls either as Net::FTP::Simple->send_files or
-    #  Net::FTP::Simple::send_files
+    # Allow calls either as Net::FTP::Simple->rename_files or
+    #  Net::FTP::Simple::rename_files
     my ($opt_ref) = $_[-1];
 
     my @successful_renames;
-    my $retry_count = 0;
 
     my $ftp = Net::FTP::Simple->_new($opt_ref);
 
-    if ($ftp->{'remote_dir'}) {
-
+    if (exists $ftp->{'remote_dir'}) {
         $ftp->_conn()->cwd($ftp->{'remote_dir'})
             or croak $ftp->_error("Error changing to remote directory",
-                     "'$ftp->{'remote_dir'}'");
+                                  "'$ftp->{'remote_dir'}'");
     }
 
-    my ($src, $dst);
-
-    # FIXME How about doing the retry here?
     FILE_TO_RENAME:
-    #while ( ($src) = sort keys %{ $ftp->{'rename_files'} }) {
-    for $src (sort keys %{ $ftp->{'rename_files'} }) {
-        $dst = $ftp->{'rename_files'}{ $src };
+    for my $src (sort keys %{ $ftp->{'rename_files'} }) {
+        my $dst = $ftp->{'rename_files'}{ $src };
+        my $try_count;
 
-        $retry_count += 1;
+        eval {
+            $try_count = $ftp->_op_retry('rename', $src, $dst);
+        };
 
-        unless ( $ftp->_conn()->rename($src, $dst) ) {
-            carp $ftp->_error("Error renaming '$src' to '$dst'");
-
-            if ($ftp->_is_retryable_and_sleep('rename', $retry_count)) {
-                redo FILE_TO_RENAME;
-            }
-
-            # Fall through on inability to retry
+        if ($EVAL_ERROR =~ m/'rename' failed after \d+ attempts/ms) {
+            carp "Error renaming '$src' to '$dst'";
             next FILE_TO_RENAME;
         }
+        elsif ($EVAL_ERROR) {
+            # Rethrow the exception if it's not recognized
+            croak $EVAL_ERROR;
+        }
 
-        # $retry_count is always at least 1
-        if ($retry_count > 1 ) {
+        if ($try_count > 1 ) {
             carp "Rename of file from '$src' to '$dst' succeeded after"
-                . " $retry_count tries";
+                . " $try_count tries";
         }
 
         push @successful_renames, $src;
 
-    }
-    continue {
-        # Called on next, not on redo
-        $retry_count = 0;
     }
 
     @successful_renames = sort @successful_renames;
@@ -141,8 +126,8 @@ sub rename_files {
 }
 
 sub retrieve_files {
-    # Allow calls either as Net::FTP::Simple->send_files or
-    #  Net::FTP::Simple::send_files
+    # Allow calls either as Net::FTP::Simple->retrieve_files or
+    #  Net::FTP::Simple::retrieve_files
     my ($opt_ref) = $_[-1];
 
     my @successful_transfers;
@@ -162,7 +147,6 @@ sub retrieve_files {
         }
         else {
             # Punt if we have neither files nor a file filter
-            # [ FIXME Should this be an exception/croak? ]
             return;
         }
     }
@@ -192,8 +176,8 @@ sub retrieve_files {
 }
 
 sub list_files {
-    # Allow calls either as Net::FTP::Simple->send_files or
-    #  Net::FTP::Simple::send_files
+    # Allow calls either as Net::FTP::Simple->list_files or
+    #  Net::FTP::Simple::list_files
     my ($opt_ref) = $_[-1];
 
     my @remote_files;
@@ -394,24 +378,55 @@ sub _create_and_cwd_remote_dir {
 
 }
 
+
+sub _op_retry {
+    my ($self, $op, @op_args) = @_;
+    my $conn = $self->_conn();
+    my $try_count = 1;
+
+    croak ref $conn, " cannot do '$op'"
+        unless ($conn->can($op));
+
+    OP_TRY:
+    while(not $conn->$op(@op_args)) {
+        $try_count += 1;
+
+        croak "'$op' failed after $try_count attempts"
+            unless ( $self->_is_retryable_op($op, $try_count) );
+
+        $self->_sleep_for_op($op);
+    }
+
+    return $try_count;
+}
+
+# 
+# Sleep for operation; returns nothing useful.
 #
-# _is_retryable_and_sleep - Tests if a failing operation is retryable, 
-#                           comparing both the error message and the retry 
-#                           count.  If a message is retryable, it sleeps 
-#                           the appropriate time.
+sub _sleep_for_op {
+    my $self = shift;
+    my ($op) = @_;
+
+    my $retry_wait  = exists $retry_wait{ $op } ? $retry_wait{ $op }
+                                                : $retry_wait{ 'default' }
+                                                ;
+
+    sleep $retry_wait;
+
+}
+
 #
-sub _is_retryable_and_sleep {
+# _is_retryable_op - Tests if a failing operation is retryable, 
+#                    comparing both the error message and the retry count.
+#
+sub _is_retryable_op {
     my $self = shift;
     my ($op, $count) = @_;
 
     my $caller_error_message = $self->_conn()->message();
 
-    my $retry_max   = exists $retry_max{ $op }  ? $retry_max{ $op }   
+    my $retry_max = exists $retry_max{ $op }  ? $retry_max{ $op }   
                                                 : $retry_max{ 'default' }
-                                                ;
-
-    my $retry_wait  = exists $retry_wait{ $op } ? $retry_wait{ $op }
-                                                : $retry_wait{ 'default' }
                                                 ;
 
     return unless   (exists $retryable_errors{ $op });
@@ -419,8 +434,7 @@ sub _is_retryable_and_sleep {
 
     for my $msg (@{ $retryable_errors{ $op } }) {
         if ($caller_error_message =~ m/$msg/ms) {  # No 'x'!
-            sleep $retry_wait;
-            return $msg;
+            return 1;
         }
     }
 

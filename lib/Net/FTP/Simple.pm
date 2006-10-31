@@ -15,9 +15,10 @@ use File::Basename  qw( basename dirname );
 use File::Spec;
 use Net::FTP;
 
-# FIXME MakeMaker doesn't handle this well
-#eval q{ use version; our $VERSION = qv(0.0.1) };
-our $VERSION = '0.0.4'; # if ($EVAL_ERROR);
+# FIXME MakeMaker handles it okay if it's all on one line, but Perl::Critic
+# pukes :(
+#eval q{ use version; our $VERSION = qv(0.0.5) }; our $VERSION = '0.0005' if ($EVAL_ERROR);
+our $VERSION = '0.0005';
 
 
 sub send_files {
@@ -494,99 +495,118 @@ Net::FTP.
 
 =head1 VERSION
 
-This document describes Net::FTP::Simple version 0.0.3.
+This document describes Net::FTP::Simple version 0.0005.
 
 =head1 SYNOPSIS
 
-use Net::FTP::Simple;
+    use Net::FTP::Simple;
 
-my @remote_files = Net::FTP::Simple->list_files({
-        username        => $username,
-        password        => $password,
-        server          => $server,
-        remote_dir      => 'path/to/dir',
-        debug_ftp       => 1,
-        file_filter     => qr/foo/,
+    my @remote_files = Net::FTP::Simple->list_files({
+            username        => $username,
+            password        => $password,
+            server          => $server,
+            remote_dir      => 'path/to/dir',
+            debug_ftp       => 1,
+            file_filter     => qr/foo/,
+        });
+
+    print "List:\n\t", join("\n\t", @remote_files), "\n")
+        if @remote_files;
+
+    my @sent_files = Net::FTP::Simple->send_files({
+            username        => $username,
+            password        => $password,
+            server          => $server,
+            remote_dir      => 'path/to/dir',
+            debug_ftp       => 1,
+            files           => [
+                                    'foo.txt',
+                                    'bar.txt',
+                                    'baz.txt',
+                                ],
+        });
+
+    print "The following files were sent successfully:\n\t",
+        join("\n\t", @sent_files), "\n"
+            if @sent_files;
+
+
+    my @received_files = Net::FTP::Simple->retrieve_files({
+            username        => $username,
+            password        => $password,
+            server          => $server,
+            remote_dir      => 'path/to/dir',
+            debug_ftp       => 1,
+            files           => [
+                                    'foo.txt',
+                                    'bar.txt',
+                                    'baz.txt',
+                                ],
+        });
+
+    print "The following files were retrieved successfully:\n\t",
+        join("\n\t", @received_files), "\n"
+            if @received_files;
+
+    my @received_filtered_files = Net::FTP::Simple->retrieve_files({
+            username        => $username,
+            password        => $password,
+            server          => $server,
+            remote_dir      => 'path/to/dir',
+            debug_ftp       => 1,
+            file_filter     => qr/^ba.\.txt/,
+            delete_after    => 1,
+        });
+
+    print "The following files were retrieved successfully:\n\t",
+        join("\n\t", @received_filtered_files), "\n"
+            if @received_filtered_files;
+
+    my @renamed_files = Net::FTP::Simple->rename_files({
+            username        => $username,
+            password        => $password,
+            server          => $server,
+            remote_dir      => 'path/to/dir',
+            debug_ftp       => 1,
+            rename_files    => {
+                    'old_name'  => 'new_name',
+            },
     });
-
-print "List:\n\t", join("\n\t", @remote_files), "\n")
-    if @remote_files;
-
-my @sent_files = Net::FTP::Simple->send_files({
-        username        => $username,
-        password        => $password,
-        server          => $server,
-        remote_dir      => 'path/to/dir',
-        debug_ftp       => 1,
-        files           => [
-                                'foo.txt',
-                                'bar.txt',
-                                'baz.txt',
-                            ],
-    });
-
-print "The following files were sent successfully:\n\t",
-    join("\n\t", @sent_files), "\n"
-        if @sent_files;
-
-
-my @received_files = Net::FTP::Simple->retrieve_files({
-        username        => $username,
-        password        => $password,
-        server          => $server,
-        remote_dir      => 'path/to/dir',
-        debug_ftp       => 1,
-        files           => [
-                                'foo.txt',
-                                'bar.txt',
-                                'baz.txt',
-                            ],
-    });
-
-print "The following files were retrieved successfully:\n\t",
-    join("\n\t", @received_files), "\n"
-        if @received_files;
-
-my @received_filtered_files = Net::FTP::Simple->retrieve_files({
-        username        => $username,
-        password        => $password,
-        server          => $server,
-        remote_dir      => 'path/to/dir',
-        debug_ftp       => 1,
-        file_filter     => qr/^ba.\.txt/,
-        delete_after    => 1,
-    });
-
-print "The following files were retrieved successfully:\n\t",
-    join("\n\t", @received_filtered_files), "\n"
-        if @received_filtered_files;
-
-my @renamed_files = Net::FTP::Simple->rename_files({
-        username        => $username,
-        password        => $password,
-        server          => $server,
-        remote_dir      => 'path/to/dir',
-        debug_ftp       => 1,
-        rename_files    => {
-                'old_name'  => 'new_name',
-        },
-});
 
 =head1 INTERFACE 
 
-Net::FTP::Simple provides the user with three operations: list a directory,
-retrieve a directory or list of files, or send a list of files.
+Net::FTP::Simple provides the user with four operations: list a directory,
+retrieve a directory or list of files, send a list of files and rename a list
+of files.
 
-All three operations, list_files(), retrieve_files() and
-send_files() may be invoked using either module or class syntax; i.e.,
-Net::FTP::Simple::list_files() or Net::FTP::Simple->list_files().  As these
-are one-shot operations, there is no publically-instantiable object.
+All four operations, L<list_files()>, L<retrieve_files()>, L<send_files()>
+and L<rename_files()> may be invoked using either module or class syntax;
+i.e., Net::FTP::Simple::list_files() or Net::FTP::Simple->list_files().
+As these are one-shot operations, there is no publically-instantiable object.
+
+All operations are invoked with a single hash ref argument with the options
+described below as hash keys.
+
+There is a generalized retry infrastructure; currently only renames (used in
+both L<send_files()> and L<rename_files()>) are retried, but future
+enhancement should allow all operations to be retried.  To disable retries for
+rename, set
+
+ $Net::FTP::Simple::retry_max{'rename'} = 0;
+
+The retry infrastructure also sleeps for 10 seconds by default between tries.
+This may be adjusted with
+
+ $Net::FTP::Simple::retry_wait{'rename'} = 0;
+
+B<WARNING:> Directly fiddling with package variables like this does not make a
+good interface, so don't expect it to stay around!
 
 =head2 Subroutines
 
 =over 4
 
-=item send_files()
+=item C<send_files()>
 
 Given a list of files, send them via FTP.
 
@@ -603,7 +623,7 @@ processing.
 
 Returns an array or array ref of the original names of the sent files.
 
-=item retrieve_files()
+=item C<retrieve_files()>
 
 Retrieve a list of files or a directory of files.
 
@@ -620,14 +640,14 @@ Files may be specified with a list called 'files' or a regular expression
 'file_filter'.  'files' takes precedence over 'file_filter'; if both are
 given, the latter is ignored.
 
-=item list_files()
+=item C<list_files()>
 
 List files in a given directory.
 
 Ignores anything that is not a normal file--directories, device files, FIFOs,
 sockets, etc.  Currently only works with UNIX-like directory listings.
 
-=item rename_files()
+=item C<rename_files()>
 
 Renames the files given in the hash ref 'rename_files', after first changing
 to 'remote_dir'.
@@ -641,55 +661,55 @@ renamed files.
 
 =over 4
 
-=item server 
+=item * C<server>
 
 Hostname or IP address of FTP server.
 
-=item username 
+=item * C<username>
 
 Login username.
 
-=item password 
+=item * C<password>
 
 Login password.
 
-=item mode
+=item * C<mode>
 
 C<ascii> or C<binary> (default C<binary>).
 
-=item debug_ftp
+=item * C<debug_ftp>
 
-(bool) Turn on Net::FTP debugging.
+(bool) Turn on C<Net::FTP> debugging.
 
-=item remote_dir
+=item * C<remote_dir>
 
 Remote directory against which to operate.
 
-=item files
+=item * C<files>
 
 List ref of files to operate one.
 
 =back
 
-=head2 Retrieval Options
+=head2 retrieve_files() Options
 
 =over 4
 
-=item delete_after 
+=item * C<delete_after>
 
 (bool) Delete files after retrieving them.
 
-=item file_filter
+=item * C<file_filter>
 
 Regex against which to apply to list of remote files.
 
 =back
 
-=head2 List Options
+=head2 list_files() Options
 
 =over 4
 
-=item file_filter
+=item * C<file_filter>
 
 Regex against which to apply to list of remote files.
 
@@ -729,6 +749,25 @@ Please report any bugs or feature requests to
 C<bug-net-ftp-simple@rt.cpan.org>, or through the web interface at
 L<http://rt.cpan.org>.
 
+=head1 TODO
+
+=over 4
+
+=item * Implement retry for all C<Net::FTP> operations
+
+=item * Move carp messages into a package hash for easier testing and
+        client-based filtering of warnings.
+
+=item * Add ability to disable renaming in C<send_files()>.
+
+=item * Split major operations into separate test modules, with separate
+        module for private subroutines.
+
+=item * Add unit testing for C<retrieve_files()>.
+
+=item * More thorough testing all around.
+
+=back
 
 =head1 AUTHOR
 

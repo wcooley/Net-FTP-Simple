@@ -1,3 +1,11 @@
+0.0005
+ - Fixed Makefile.PL to correctly require Test::MockObject and several other
+   modules required for testing.
+ - Tests themselves also check for success loading Test::MockObject and
+   others.
+ - Updated documentation.
+ - Moved to a float version number.
+
 0.0.4  Thu Oct 26 15:54:02 PDT 2006
  - Created generic _op_retry infrastructure.
  - Changed send_files and rename_files to use _op_retry.

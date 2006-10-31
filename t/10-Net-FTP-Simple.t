@@ -18,7 +18,7 @@ BEGIN {
         plan skip_all => 'Test::MocObject required for unit tests';
     }
     else {
-        plan tests => 74;
+        plan tests => 76;
     }
 }
 
@@ -175,7 +175,9 @@ setup_warning_handler();
 
     $Net::FTP::Simple::retry_max{$op} = 0;
 
-    for my $test_args_ref (@test_data[0]) {
+    # FIXME From here down is basically a copy and paste of the above;
+    # refactor
+    for my $test_args_ref ($test_data[0]) {
         my $tries   =    $test_args_ref->[0];
         my @series  = @{ $test_args_ref->[1] };
 
@@ -186,6 +188,23 @@ setup_warning_handler();
     }
 
     
+    $fake_conn->set_series($op, 0, 1);
+
+    eval {
+        $obj->_op_retry($op);
+    };
+
+    if ($EVAL_ERROR =~ m/'$op' failed after 2 attempts/) {
+        pass("$test: $op correctly failed after 2 tries");
+    }
+    elsif ($EVAL_ERROR) {
+        fail("$test: $op failed after 2 tries with unexpected error"
+             . "'$EVAL_ERROR'");
+    }
+    else {
+        fail("$test: $op did not fail after 2 tries as expected");
+    }
+
 }
 
 

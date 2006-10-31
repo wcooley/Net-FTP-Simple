@@ -9,6 +9,7 @@ WriteMakefile(
     ABSTRACT_FROM       => 'lib/Net/FTP/Simple.pm',
     PL_FILES            => {},
     PREREQ_PM => {
+        'Net::FTP'              => 0,
         'Test::More'            => 0,
         'Test::MockObject'      => 0,
         'Test::Perl::Critic'    => 0,

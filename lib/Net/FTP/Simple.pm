@@ -18,7 +18,7 @@ use Net::FTP;
 # FIXME MakeMaker handles it okay if it's all on one line, but Perl::Critic
 # pukes :(
 #eval q{ use version; our $VERSION = qv(0.0.5) }; our $VERSION = '0.0005' if ($EVAL_ERROR);
-our $VERSION = '0.0005';
+our $VERSION = '0.0006';
 
 
 sub send_files {

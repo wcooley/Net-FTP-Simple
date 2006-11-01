@@ -1,3 +1,6 @@
+0.0006
+ - Added test-data/ back into manifest so tests which require it do not fail.
+
 0.0005
  - Fixed Makefile.PL to correctly require Test::MockObject and several other
    modules required for testing.

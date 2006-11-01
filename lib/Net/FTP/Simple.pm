@@ -733,7 +733,7 @@ Net::FTP::Simple requires no configuration files or environment variables.
 
 =head1 DEPENDENCIES
 
-As this module is a facade layer on top of Net::FTP, it required Net::FTP.
+As this module is a facade layer on top of Net::FTP, it requires Net::FTP.
 
 =head1 INCOMPATIBILITIES
 

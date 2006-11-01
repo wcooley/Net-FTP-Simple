@@ -1,4 +1,3 @@
-^test-data/
 \B\.svn\b
 ^MANIFEST\.bak
 (?i)^makefile$

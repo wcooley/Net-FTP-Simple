@@ -406,6 +406,8 @@ setup_warning_handler();
     );
 
 =begin comment
+    Test retries of file renaming
+
     Fail once on the first file.
     Fail once on the second file.
     Succeed immediately on the third file.
@@ -430,14 +432,15 @@ setup_warning_handler();
     is(@succ_transfers, 3, "$test: 3 files sent");
 
 =begin comment
-   
-     Fail once on the first file
-     Twice on the second file
-     Four times (which is the max) on the third
-       There is a final one to catch the potential case where the third does
-       not fail after four tries.
+    Test retries of file renaming
+
+    Fail once on the first file
+    Twice on the second file
+    Four times (which is the max) on the third
+      There is a final one to catch the potential case where the third does
+      not fail after four tries.
     
-     Note that there is a potential off-by-one here: The $retry_max{'rename'}
+    Note that there is a potential off-by-one here: The $retry_max{'rename'}
      is 3, which means there should be I<4> tries (which is one try and 
      I<3> retries!).
     

@@ -50,18 +50,10 @@ sub send_files {
             next FILE_TO_TRANSFER;
         }
 
-        eval {
-            $try_count = $ftp->_op_retry('rename', $tmpname, $basename);
-        };
+        $try_count = $ftp->_rename_file($tmpname, $basename);
 
-        if ($EVAL_ERROR =~ m/'rename' failed after \d+ attempts/ms) {
-            carp "Error renaming '$tmpname' to '$basename'";
-            next FILE_TO_TRANSFER;
-        }
-        elsif($EVAL_ERROR) {
-            # Rethrow unexpected exceptions
-            croak $EVAL_ERROR;
-        }
+        next FILE_TO_TRANSFER 
+            unless defined $try_count and $try_count > 0;
 
         if ($try_count > 1) {
             carp "Transfer of file '$file' succeeded after $try_count tries";
@@ -86,30 +78,25 @@ sub rename_files {
     my $ftp = Net::FTP::Simple->_new($opt_ref);
 
     if (exists $ftp->{'remote_dir'}) {
+
         $ftp->_conn()->cwd($ftp->{'remote_dir'})
             or croak $ftp->_error("Error changing to remote directory",
                                   "'$ftp->{'remote_dir'}'");
+
     }
 
     FILE_TO_RENAME:
     for my $src (sort keys %{ $ftp->{'rename_files'} }) {
+
         my $dst = $ftp->{'rename_files'}{ $src };
         my $try_count;
 
-        eval {
-            $try_count = $ftp->_op_retry('rename', $src, $dst);
-        };
+        $try_count = $ftp->_rename_file($src, $dst);
 
-        if ($EVAL_ERROR =~ m/'rename' failed after \d+ attempts/ms) {
-            carp "Error renaming '$src' to '$dst'";
-            next FILE_TO_RENAME;
-        }
-        elsif ($EVAL_ERROR) {
-            # Rethrow the exception if it's not recognized
-            croak $EVAL_ERROR;
-        }
+        next FILE_TO_RENAME 
+            unless defined $try_count and $try_count > 0;
 
-        if ($try_count > 1 ) {
+        if ( $try_count > 1 ) {
             carp "Rename of file from '$src' to '$dst' succeeded after"
                 . " $try_count tries";
         }
@@ -291,6 +278,27 @@ sub _setup_mode {
         $self->_conn()->binary()
             or croak $self->_error('Error setting transfer mode to binary');
     }
+}
+
+sub _rename_file {
+    my ($self, $src, $dst) = @_;
+
+    my $try_count = 0;
+
+    eval {
+        $try_count = $self->_op_retry('rename', $src, $dst);
+    };
+
+    if ($EVAL_ERROR =~ m/'rename' failed after \d+ attempts/ms) {
+        carp "Error renaming '$src' to '$dst'";
+        return;
+    }
+    elsif ($EVAL_ERROR) {
+        # Rethrow the exception if it's not recognized
+        croak $EVAL_ERROR;
+    }
+
+    return $try_count;
 }
 
 #sub _setup_connection {
@@ -510,7 +518,7 @@ This document describes Net::FTP::Simple version 0.0005.
             file_filter     => qr/foo/,
         });
 
-    print "List:\n\t", join("\n\t", @remote_files), "\n")
+    print "List:\n\t", join("\n\t", @remote_files), "\n"
         if @remote_files;
 
     my @sent_files = Net::FTP::Simple->send_files({

@@ -15,7 +15,7 @@ BEGIN {
     eval 'use Test::MockObject';
 
     if ($EVAL_ERROR) {
-        plan skip_all => 'Test::MocObject required for unit tests';
+        plan skip_all => 'Test::MockObject required for unit tests';
     }
     else {
         plan tests => 76;

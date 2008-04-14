@@ -5,6 +5,7 @@ lib/Net/FTP/Simple.pm
 Makefile.PL
 MANIFEST
 MANIFEST.SKIP
+perl-Net-FTP-Simple.spec
 README
 t/00.load.t
 t/10-Net-FTP-Simple.t

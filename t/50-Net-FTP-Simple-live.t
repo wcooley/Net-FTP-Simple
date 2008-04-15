@@ -10,16 +10,16 @@ use POSIX           qw( strftime );
 use Test::More;
 
 BEGIN {
-    use_ok('Net::FTP::Simple');
+    unless (exists $ENV{'NET_FTP_SIMPLE_LOGIN'}) {
+        plan skip_all => 'FTP conn info missing; set env var'
+                    . ' NET_FTP_SIMPLE_LOGIN="user:pass:server"';
+    }
+    else {
+        plan tests => 12;
+        use_ok('Net::FTP::Simple');
+    }
 }
 
-unless (exists $ENV{'NET_FTP_SIMPLE_LOGIN'}) {
-    plan skip_all => 'FTP conn info missing; set env var'
-                   . ' NET_FTP_SIMPLE_LOGIN="user:pass:server"';
-}
-else {
-    plan tests => 12;
-}
 
 my @base_test_files = qw( file-a file-b file-c );
 

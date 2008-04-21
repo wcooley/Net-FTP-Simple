@@ -15,7 +15,7 @@ BEGIN {
                     . ' NET_FTP_SIMPLE_LOGIN="user:pass:server"';
     }
     else {
-        plan tests => 12;
+        plan tests => 13;
         use_ok('Net::FTP::Simple');
     }
 }

@@ -1,3 +1,12 @@
+0.0007  Mon Apr 21 10:07:30 PDT 2008
+ - Don't require some of the more involved testing modules. They are not
+   actually necessary for general use. (RT#29576)
+ - Added an RPM spec file.
+ - Corrected check for live test environment to not fail on more recent
+   versions of Test::More.
+ - Factor out rename test and retry into a separate subroutine. Should do more
+   of this.
+
 0.0006
  - Added test-data/ back into manifest so tests which require it do not fail.
 

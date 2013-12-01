@@ -14,6 +14,8 @@ WriteMakefile(
     TEST_REQUIRES => {
         'Test::More'            => 0,
         'Test::MockObject'      => 0,
+        'Test::Pod'             => 0,
+        'Test::Pod::Coverage'   => 0,
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'Net-FTP-Simple-*' },

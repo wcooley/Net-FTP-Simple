@@ -12,3 +12,6 @@ pm_to_blib$
 ^data/test-output
 ^tmp/
 ^Net-FTP-Simple.*/
+^\.git/
+^\.travis\.yml$
+^MYMETA\.(yml|json)$

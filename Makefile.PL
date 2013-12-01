@@ -10,6 +10,8 @@ WriteMakefile(
     PL_FILES            => {},
     PREREQ_PM => {
         'Net::FTP'              => 0,
+    },
+    TEST_REQUIRES => {
         'Test::More'            => 0,
         'Test::MockObject'      => 0,
     },
